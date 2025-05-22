@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🐾 Catch the Cat 3.0</title>
+  <style>
+    * { 
+      box-sizing: border-box; 
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #ffe4ec, #f8f0ff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: #ff69b4;
+      text-shadow: 2px 2px white;
+      text-align: center;
+      margin-bottom: 20px;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-10px); }
+      60% { transform: translateY(-5px); }
+    }
+
+    #scoreboard {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px 25px;
+      border-radius: 15px;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    #game-controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    select, button {
+      font-size: 1rem;
+      padding: 10px 15px;
+      border-radius: 10px;
+      border: 2px solid #ff69b4;
+      background: #fff0f5;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    select:hover, button:hover:not(:disabled) {
+      background: #ffe0f0;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(255, 105, 180, 0.3);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #game-area {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      height: 500px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
+      border: 3px solid #ff69b4;
+    }
+
+    .cat {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: none;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #ff69b4, #ffc0cb);
+      font-size: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+      animation: wiggle 2s ease-in-out infinite;
+      user-select: none;
+    }
+
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-5deg) scale(1.05); }
+      75% { transform: rotate(5deg) scale(1.05); }
+    }
+
+    .cat:hover {
+      transform: scale(1.2) rotate(10deg) !important;
+      box-shadow: 0 0 20px rgba(255, 105, 180, 0.6);
+    }
+
+    .cat:active {
+      transform: scale(0.9) !important;
+    }
+
+    .click-effect {
+      position: absolute;
+      pointer-events: none;
+      color: #4CAF50;
+      font-weight: bold;
+      font-size: 1.5rem;
+      animation: scorePopup 0.8s ease-out forwards;
+      text-shadow: 1px 1px white;
+    }
+
+    @keyframes scorePopup {
+      0% { transform: scale(0.5) translateY(0); opacity: 1; }
+      100% { transform: scale(1.2) translateY(-50px); opacity: 0; }
+    }
+
+    #end-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 240, 245, 0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .end-content {
+      text-align: center;
+      background: #fff0f5;
+      border: 3px solid #ff69b4;
+      padding: 30px 40px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(255, 105, 180, 0.3);
+      animation: popIn 0.6s ease;
+    }
+
+    .end-content h2 { 
+      color: #ff69b4; 
+      font-size: 2rem; 
+      margin-bottom: 15px;
+    }
+
+    .end-content p { 
+      font-size: 1.2rem; 
+      margin: 10px 0;
+    }
+
+    #play-again-btn {
+      margin-top: 15px;
+      background: #4CAF50;
+      color: white;
+      border-color: #4CAF50;
+    }
+
+    #play-again-btn:hover {
+      background: #45a049;
+    }
+
+    @keyframes popIn { 
+      0% { transform: scale(0.8); opacity: 0; } 
+      100% { transform: scale(1); opacity: 1; } 
+    }
+
+    .floating-heart {
+      position: fixed;
+      color: #ff69b4;
+      font-size: 20px;
+      pointer-events: none;
+      animation: floatUp 3s ease-out infinite;
+      z-index: 1;
+    }
+
+    @keyframes floatUp {
+      0% { 
+        transform: translateY(0) rotate(0deg); 
+        opacity: 0.8; 
+      }
+      100% { 
+        transform: translateY(-100px) rotate(360deg); 
+        opacity: 0; 
+      }
+    }
+
+    footer {
+      margin-top: 20px;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      h1 { font-size: 2rem; }
+      #game-area { height: 400px; }
+      .cat { width: 70px; height: 70px; font-size: 2rem; }
+      select, button { font-size: 0.9rem; padding: 8px 12px; }
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 10px; }
+      #game-controls { flex-direction: column; align-items: center; }
+      #game-area { height: 350px; }
+      .cat { width: 60px; height: 60px; font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Catch the Cat!</h1>
+  
+  <div id="scoreboard">Score: 0 | Time Left: 30 | High Score: 0</div>
+
+  <div id="game-controls">
+    <select id="difficulty">
+      <option value="easy">Easy 🐢</option>
+      <option value="medium" selected>Medium 🐱</option>
+      <option value="hard">Hard 🐆</option>
+    </select>
+    <button id="start-btn">🎮 Start Game</button>
+  </div>
+
+  <div id="game-area">
+    <div class="cat" id="cat">🐱</div>
+    
+    <div id="end-screen">
+      <div class="end-content">
+        <h2>🎉 Game Over!</h2>
+        <p id="final-score-text">Your Score: 0</p>
+        <p id="high-score-text">High Score: 0</p>
+        <button id="play-again-btn">🔁 Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>Made with ❤️ by morphx</footer>
+
+  <script>
+    console.log('Script loading...');
+
+    // Game variables
+    let score = 0;
+    let highScore = 0;
+    let timeLeft = 30;
+    let gameInterval = null;
+    let moveInterval = null;
+    let isGameRunning = false;
+    let catSize = 80;
+    let moveSpeed = 1000;
+
+    // Get DOM elements
+    const cat = document.getElementById('cat');
+    const gameArea = document.getElementById('game-area');
+    const scoreboard = document.getElementById('scoreboard');
+    const startBtn = document.getElementById('start-btn');
+    const difficulty = document.getElementById('difficulty');
+    const endScreen = document.getElementById('end-screen');
+    const finalScoreText = document.getElementById('final-score-text');
+    const highScoreText = document.getElementById('high-score-text');
+    const playAgainBtn = document.getElementById('play-again-btn');
+
+    console.log('Elements found:', {
+      cat: !!cat,
+      gameArea: !!gameArea,
+      startBtn: !!startBtn
+    });
+
+    // Load high score
+    function loadHighScore() {
+      try {
+        const saved = localStorage.getItem('catGameHighScore');
+        highScore = saved ? parseInt(saved) : 0;
+      } catch (e) {
+        console.log('Could not load high score');
+        highScore = 0;
+      }
+    }
+
+    // Save high score
+    function saveHighScore() {
+      try {
+        localStorage.setItem('catGameHighScore', highScore.toString());
+      } catch (e) {
+        console.log('Could not save high score');
+      }
+    }
+
+    // Update scoreboard display
+    function updateScoreboard() {
+      if (scoreboard) {
+        scoreboard.textContent = `Score: ${score} | Time Left: ${timeLeft} | High Score: ${highScore}`;
+      }
+    }
+
+    // Get random position for cat
+    function getRandomPosition() {
+      const gameRect = gameArea.getBoundingClientRect();
+      const maxX = gameArea.clientWidth - catSize;
+      const maxY = gameArea.clientHeight - catSize;
+      
+      return {
+        x: Math.max(0, Math.random() * maxX),
+        y: Math.max(0, Math.random() * maxY)
+      };
+    }
+
+    // Move cat to random position
+    function moveCat() {
+      if (!isGameRunning) return;
+      
+      const { x, y } = getRandomPosition();
+      cat.style.left = x + 'px';
+      cat.style.top = y + 'px';
+      
+      console.log(`Cat moved to: ${x}, ${y}`);
+    }
+
+    // Show click effect
+    function showClickEffect(x, y) {
+      const effect = document.createElement('div');
+      effect.className = 'click-effect';
+      effect.textContent = '+1';
+      effect.style.left = x + 'px';
+      effect.style.top = y + 'px';
+      
+      gameArea.appendChild(effect);
+      
+      setTimeout(() => {
+        if (effect.parentNode) {
+          effect.parentNode.removeChild(effect);
+        }
+      }, 800);
+    }
+
+    // Create floating heart effect
+    function createFloatingHeart() {
+      const heart = document.createElement('div');
+      heart.className = 'floating-heart';
+      heart.textContent = '💖';
+      heart.style.left = Math.random() * window.innerWidth + 'px';
+      heart.style.top = window.innerHeight + 'px';
+      
+      document.body.appendChild(heart);
+      
+      setTimeout(() => {
+        if (heart.parentNode) {
+          heart.parentNode.removeChild(heart);
+        }
+      }, 3000);
+    }
+
+    // Handle cat click
+    function handleCatClick(event) {
+      if (!isGameRunning) return;
+      
+      console.log('Cat clicked!');
+      score++;
+      
+      // Show click effect
+      const rect = cat.getBoundingClientRect();
+      const gameRect = gameArea.getBoundingClientRect();
+      showClickEffect(
+        rect.left - gameRect.left + rect.width / 2,
+        rect.top - gameRect.top + rect.height / 2
+      );
+      
+      // Create floating heart occasionally
+      if (Math.random() < 0.3) {
+        createFloatingHeart();
+      }
+      
+      updateScoreboard();
+      moveCat();
+      
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    // Update game settings based on difficulty
+    function updateSettings() {
+      const level = difficulty.value;
+      
+      switch (level) {
+        case 'easy':
+          moveSpeed = 1500;
+          catSize = 100;
+          break;
+        case 'medium':
+          moveSpeed = 1000;
+          catSize = 80;
+          break;
+        case 'hard':
+          moveSpeed = 600;
+          catSize = 60;
+          break;
+      }
+      
+      cat.style.width = catSize + 'px';
+      cat.style.height = catSize + 'px';
+    }
+
+    // End the game
+    function endGame() {
+      console.log('Game ending...');
+      
+      isGameRunning = false;
+      
+      // Clear intervals
+      if (gameInterval) {
+        clearInterval(gameInterval);
+        gameInterval = null;
+      }
+      
+      if (moveInterval) {
+        clearInterval(moveInterval);
+        moveInterval = null;
+      }
+      
+      // Hide cat
+      cat.style.display = 'none';
+      
+      // Update high score
+      if (score > highScore) {
+        highScore = score;
+        saveHighScore();
+      }
+      
+      // Show end screen
+      finalScoreText.textContent = `Your Score: ${score}`;
+      highScoreText.textContent = `High Score: ${highScore}`;
+      endScreen.style.display = 'flex';
+      
+      // Reset start button
+      startBtn.disabled = false;
+      startBtn.textContent = '🎮 Start Game';
+      
+      console.log('Game ended. Final score:', score);
+    }
+
+    // Start the game
+    function startGame() {
+      console.log('Starting game...');
+      
+      // Reset game state
+      score = 0;
+      timeLeft = 30;
+      isGameRunning = true;
+      
+      // Clear any existing intervals
+      if (gameInterval) clearInterval(gameInterval);
+      if (moveInterval) clearInterval(moveInterval);
+      
+      // Update settings
+      updateSettings();
+      
+      // Hide end screen
+      endScreen.style.display = 'none';
+      
+      // Show and position cat
+      cat.style.display = 'flex';
+      moveCat();
+      
+      // Update UI
+      updateScoreboard();
+      startBtn.disabled = true;
+      startBtn.textContent = '🎮 Playing...';
+      
+      // Start game timer
+      gameInterval = setInterval(() => {
+        timeLeft--;
+        updateScoreboard();
+        
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+      
+      // Start cat movement
+      moveInterval = setInterval(() => {
+        moveCat();
+      }, moveSpeed);
+      
+      console.log('Game started successfully!');
+    }
+
+    // Initialize game
+    function initGame() {
+      console.log('Initializing game...');
+      
+      loadHighScore();
+      updateScoreboard();
+      
+      // Add event listeners
+      if (cat) {
+        cat.addEventListener('click', handleCatClick);
+        cat.addEventListener('touchstart', handleCatClick, { passive: false });
+        console.log('Cat click listener added');
+      }
+      
+      if (startBtn) {
+        startBtn.addEventListener('click', startGame);
+        console.log('Start button listener added');
+      }
+      
+      if (playAgainBtn) {
+        playAgainBtn.addEventListener('click', startGame);
+        console.log('Play again button listener added');
+      }
+      
+      if (difficulty) {
+        difficulty.addEventListener('change', updateSettings);
+        console.log('Difficulty change listener added');
+      }
+      
+      // Prevent context menu on game area
+      if (gameArea) {
+        gameArea.addEventListener('contextmenu', (e) => e.preventDefault());
+      }
+      
+      console.log('Game initialized successfully!');
+    }
+
+    // Start initialization when page loads
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initGame);
+    } else {
+      initGame();
+    }
+
+    // Add some debug info
+    console.log('Cat Game script loaded successfully!');
+    
+    // Test function to verify everything works
+    window.testGame = function() {
+      console.log('Testing game functionality...');
+      console.log('Elements check:', {
+        cat: !!cat,
+        gameArea: !!gameArea,
+        startBtn: !!startBtn,
+        scoreboard: !!scoreboard
+      });
+      
+      if (cat && gameArea) {
+        console.log('Game area size:', gameArea.clientWidth, 'x', gameArea.clientHeight);
+        console.log('Cat size:', cat.offsetWidth, 'x', cat.offsetHeight);
+      }
+      
+      return 'Test complete - check console for details';
+    };
+  </script>
+</body>
+</html>
